@@ -12,33 +12,17 @@ namespace WeakDelegateConsole
     {
         static void Main(string[] args)
         {
-            /*  Source source = new Source();
-              Listener listener = new Listener();
-              source.Completed += (Action<int>)new WeakDelegate((Action<int>)listener.Handler).Weak;
-              source.Completed1 += (Action<int, double>)new WeakDelegate((Action<int, double>)listener.Handler).Weak;
-              source.Completed2 += (Action<int, double, int>)new WeakDelegate((Action<int, double, int>)listener.Handler).Weak;
-              source.Completed3 += (Action<int, int, int, int>)new WeakDelegate((Action<int, int, int, int>)listener.Handler).Weak;
-              source.LetsDoIt();
-              Console.Read();*/
-            TestWeakReferenceDisappearing();
-        }
-
-        public static void TestWeakReferenceDisappearing()
-        {
             Source source = new Source();
             Listener listener = new Listener();
-            WeakDelegate weakDelegate = new WeakDelegate((Action<int>)listener.Handler);
-            source.Completed += (Action<int>)weakDelegate.Weak;
-            listener = null;
-            //weakDelegate = null;
-            //source = null;
-            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-            GC.WaitForFullGCComplete(100);
-            GC.WaitForPendingFinalizers();
+            source.Completed += (Action<int>)new WeakDelegate((Action<int>)listener.Handler).Weak;
+            source.Completed1 += (Action<int, double>)new WeakDelegate((Action<int, double>)listener.Handler).Weak;
+            source.Completed2 += (Action<int, double, int>)new WeakDelegate((Action<int, double, int>)listener.Handler).Weak;
+            source.Completed3 += (Action<int, int, int, int>)new WeakDelegate((Action<int, int, int, int>)listener.Handler).Weak;
+            source.LetsDoIt();
             Console.Read();
         }
-    }
 
+    }
 
     public class Source
     {
@@ -69,6 +53,7 @@ namespace WeakDelegateConsole
     public class Listener
     {
         private double Sum = 0;
+        private short Destroyed;
 
         public void Handler(int param1)
         {
@@ -96,17 +81,21 @@ namespace WeakDelegateConsole
 
         ~Listener()
         {
-            Console.WriteLine("Listner destroyed");
+               
         }
 
     }
 
     public class WeakDelegate
     {
-        private WeakReference Target { get; set; }
+        private WeakReference Target;
         private MethodInfo Method;
         private Type TypeOfDelegate;
 
+        public bool TargetIsNull
+        {
+            get { return !Target.IsAlive; }
+        }
 
         public WeakDelegate(Delegate d)
         {
@@ -115,7 +104,7 @@ namespace WeakDelegateConsole
             TypeOfDelegate = d.GetType();
         }
 
-        private Delegate InitProxyDelegate()
+        private Delegate InitDelegate()
         {
             ParameterExpression[] paramArr = GetParametersExpression(Method);
             Expression targetObjectExpression = GetPropertyExpression(Expression.Constant(Target), "Target", Target.Target.GetType());
@@ -153,7 +142,7 @@ namespace WeakDelegateConsole
         {
             get
             {
-                return InitProxyDelegate();
+                return InitDelegate();
 
             }
         }
