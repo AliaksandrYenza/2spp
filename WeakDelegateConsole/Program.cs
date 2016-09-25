@@ -11,23 +11,41 @@ namespace WeakDelegateConsole
     {
         static void Main(string[] args)
         {
-
+            Source source = new Source();
+            Listener listener = new Listener();
+            source.Completed += (Action<int>)new WeakDelegate((Action<int>)listener.Handler).Weak;
+            source.Completed1 += (Action<int, double>)new WeakDelegate((Action<int, double>)listener.Handler).Weak;
+            source.Completed2 += (Action<int, double, int>)new WeakDelegate((Action<int, double, int>)listener.Handler).Weak;
+            source.Completed3 += (Action<int, int, int, int>)new WeakDelegate((Action<int, int, int, int>)listener.Handler).Weak;
         }
     }
 
     public class Source
     {
-        public event Action<int> Complited;
-        public event Action<int, double> Complited1;
-        public event Action<int, double, int> Complited2;
-        public event Action<int, int, int, int> Complited3;
+        public event Action<int> Completed;
+        public event Action<int, double> Completed1;
+        public event Action<int, double, int> Completed2;
+        public event Action<int, int, int, int> Completed3;
 
+        Random r = new Random();
+        public int RandomNumber()
+        {
+            return r.Next(0, 100);
+        }
+
+        public void LetsDoIt()
+        {
+            Completed.Invoke(RandomNumber());
+            Completed1.Invoke(RandomNumber(), RandomNumber());
+            Completed2.Invoke(RandomNumber(), RandomNumber(), RandomNumber());
+            Completed3.Invoke(RandomNumber(), RandomNumber(), RandomNumber(), RandomNumber());
+        }
     }
 
-    public class Listner
+    public class Listener
     {
         private double Sum;
-        public void Handler (int param1)
+        public void Handler(int param1)
         {
             Sum = param1;
             Console.WriteLine("{0} = ", Sum.ToString());
@@ -81,6 +99,6 @@ namespace WeakDelegateConsole
                     return null;
             }
         }
-            
+
     }
 }
